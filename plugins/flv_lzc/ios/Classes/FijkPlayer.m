@@ -77,8 +77,6 @@ static const int end = 9;
 
 static int renderType = 0;
 
-// static int debugLeak = 0;
-
 - (instancetype)initJustTexture {
     self = [super init];
     if (self) {
@@ -113,10 +111,6 @@ static int renderType = 0;
         } else {
             // _ijkMediaPlayer = [[IJKFFMediaPlayer alloc] initWithFbo];
         }
-        // if (debugLeak) {
-        //    [_ijkMediaPlayer setLoop:0];
-        //    [_ijkMediaPlayer setSpeed:4.0];
-        //}
 
         [_ijkMediaPlayer setOptionIntValue:0
                                     forKey:@"start-on-prepared"
@@ -124,9 +118,33 @@ static int renderType = 0;
         [_ijkMediaPlayer setOptionIntValue:1
                                     forKey:@"enable-position-notify"
                                 ofCategory:kIJKFFOptionCategoryPlayer];
+
+        // ==================== [核心优化：硬件加速与60帧优化] ====================
+        // 1. 强制启用 iOS 苹果 VideoToolbox 硬件解码管线（核心硬解参数）
         [_ijkMediaPlayer setOptionIntValue:1
                                     forKey:@"videotoolbox"
                                 ofCategory:kIJKFFOptionCategoryPlayer];
+
+        // 2. 启用异步硬件解码，防止渲染主线程卡顿丢帧
+        [_ijkMediaPlayer setOptionIntValue:1
+                                    forKey:@"videotoolbox-async"
+                                ofCategory:kIJKFFOptionCategoryPlayer];
+
+        // 3. 允许硬解高分辨率视频（最高支持 4K）
+        [_ijkMediaPlayer setOptionIntValue:3840
+                                    forKey:@"videotoolbox-max-frame-width"
+                                ofCategory:kIJKFFOptionCategoryPlayer];
+
+        // 4. 开启丢帧机制，确保 60fps 高帧率直播实时同步渲染，防止积压延迟
+        [_ijkMediaPlayer setOptionIntValue:1
+                                    forKey:@"framedrop"
+                                ofCategory:kIJKFFOptionCategoryPlayer];
+
+        // 5. 降低直播缓存延迟，提升画面响应效率
+        [_ijkMediaPlayer setOptionIntValue:0
+                                    forKey:@"packet-buffering"
+                                ofCategory:kIJKFFOptionCategoryPlayer];
+        // =====================================================================
 
         [IJKFFMoviePlayerController setLogLevel:k_IJK_LOG_INFO];
 
