@@ -146,6 +146,31 @@ static int renderType = 0;
                                 ofCategory:kIJKFFOptionCategoryPlayer];
         // =====================================================================
 
+        // ==================== [针对 H.265/HEVC 时间戳平滑补丁] =================
+
+        // 1. 强制开启基于 PTS 的严格时间戳同步，防止 H.265 B帧乱序导致的微抽搐
+        [_ijkMediaPlayer setOptionIntValue:1
+                                    forKey:@"pts-drop-mode"
+                                ofCategory:kIJKFFOptionCategoryPlayer];
+
+        // 2. 容忍微小的时间戳抖动（单位微秒），平滑化斗鱼/虎牙推流的帧间隔不均
+        [_ijkMediaPlayer setOptionIntValue:1
+                                    forKey:@"sync-avdisp-first"
+                                ofCategory:kIJKFFOptionCategoryPlayer];
+
+        // 3. 解决 H.265 硬解首帧或关键帧解析迟钝问题，提高解码器输出稳定性
+        [_ijkMediaPlayer setOptionIntValue:1
+                                    forKey:@"wait-for-keyframe"
+                                ofCategory:kIJKFFOptionCategoryPlayer];
+        
+        // 4. 增大视频解码队列容量，避免 H.265 解码耗时波动导致帧队列吃空
+        [_ijkMediaPlayer setOptionIntValue:15
+                                    forKey:@"max-buffer-size"
+                                ofCategory:kIJKFFOptionCategoryPlayer];
+
+        // ======================================================================
+
+
         [IJKFFMoviePlayerController setLogLevel:k_IJK_LOG_INFO];
 
         [_ijkMediaPlayer addIJKMPEventHandler:self];
